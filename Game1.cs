@@ -24,14 +24,9 @@ namespace circularpong
 
         public static Circle _circle, loader;
 
-        private List<Player> playerList;
-        private List<Ball> ballList;
+        public static Color bgColor, fgColor, redColor, blueColor, yellowColor;
 
-        private static Color bgColor, fgColor, redColor, blueColor, yellowColor;
-
-        private static float playerLength, playerThickness, playerSpeed;
-        private static float ballStartSpeed, ballMaxSpeed, ballAcceleration;
-        private static int ballBounces;     
+        private bool oneBallMode;
 
         public enum Impacts
         {
@@ -49,19 +44,6 @@ namespace circularpong
         }
         private Gamestates _gamestate;
         private static int playCountdown, countdownStart;
-
-        private void ResetGame()
-        {
-            playerList.Clear();
-            ballList.Clear();
-
-            playerList.Add(new Player(0, playerLength, playerThickness, playerSpeed, redColor, Keys.Right, Keys.Left));
-            //playerList.Add(new Player(MathHelper.Pi, playerLength, playerThickness, playerSpeed, blueColor, Keys.D, Keys.A));
-            //playerList.Add(new Player(MathHelper.Pi / 2, playerLength, playerThickness, playerSpeed, yellowColor, Keys.W, Keys.S));
-
-            ballList.Add(new Ball(playerList[0], 6, ballStartSpeed, ballMaxSpeed, ballAcceleration, MathHelper.Pi / 4, _screenCenter, 0, _circleTexture));
-            //ballList.Add(new Ball(playerList[1], 6, ballStartSpeed, ballMaxSpeed, ballAcceleration, MathHelper.Pi / 4, _screenCenter, MathHelper.Pi, _circleTexture));
-        }
 
         private void DrawCenteredString(string text, float offsetY = 0)
         {
@@ -96,17 +78,8 @@ namespace circularpong
 
             countdownStart = 149;
 
-            playerList = new List<Player>();
-            ballList = new List<Ball>();
-
-            playerLength = MathHelper.Pi / 6;
-            playerThickness = 6;
-            playerSpeed = MathHelper.Pi / 32;
-
-            ballBounces = 0;
-            ballStartSpeed = _circle.radius / 120;
-            ballMaxSpeed = ballStartSpeed * 7;
-            ballAcceleration = 0.02f;
+            oneBallMode = true;
+            GameHandler.Initialize(_circle);
 
             //ResetGame();
 
@@ -134,19 +107,8 @@ namespace circularpong
 
             if (_gamestate == Gamestates.Playing)
             {
-                foreach (Ball b in ballList)
-                {
-                    Impacts result = b.Update();
-                    if (result == Impacts.Miss)
-                        _gamestate = Gamestates.Death;
-                    //else if (result == Impacts.Hit)
-                    //    b.ChangePlayer(playerList[(ballBounces + 1) % playerList.Count]);
-                }
-
-                ballBounces = ballList.Sum(e => e.bounces);
-
-                foreach (Player p in playerList)
-                    p.Update();
+                if (!GameHandler.Update())
+                    _gamestate = Gamestates.Death;
             }
             else if (_gamestate == Gamestates.Menu || _gamestate == Gamestates.Death)
             {
@@ -167,7 +129,7 @@ namespace circularpong
                 }
                 else
                 {
-                    ResetGame();
+                    GameHandler.Reset(oneBallMode);
                     _gamestate = Gamestates.Playing;
                 }
             }
@@ -185,14 +147,9 @@ namespace circularpong
 
             if (_gamestate == Gamestates.Playing)
             {
-                foreach (Ball b in ballList)
-                    b.Draw(_spriteBatch);
-                foreach (Player p in playerList)
-                    p.Draw(_spriteBatch);
+                GameHandler.Draw(_spriteBatch);
 
-                Player.DrawOverlaps(playerList, _spriteBatch);
-
-                _spriteBatch.DrawString(_font, $"Bounces: {ballBounces}", new Vector2(25, 25), fgColor * 1.4f);
+                _spriteBatch.DrawString(_font, $"Bounces: {GameHandler.ballBounces}", new Vector2(25, 25), fgColor * 1.4f);
             }
             else if (_gamestate == Gamestates.Countdown)
             {
@@ -205,7 +162,7 @@ namespace circularpong
             }
             else if (_gamestate == Gamestates.Death)
             {
-                DrawCenteredString($"Bounces: {ballBounces}", -20);
+                DrawCenteredString($"Bounces: {GameHandler.ballBounces}", -20);
                 DrawCenteredString($"Press Enter To Play Again", 20);
             }
 

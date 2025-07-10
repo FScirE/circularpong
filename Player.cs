@@ -15,7 +15,7 @@ namespace circularpong
 {
     internal class Player
     {
-        float angle;
+        public float angle { get; private set; }
         float length;
         float thickness;
         float speed;
@@ -23,7 +23,7 @@ namespace circularpong
         Keys clockwise;
         Keys counterClockwise;
 
-        public Circle circle {  get; private set; }
+        public Circle circle { get; private set; }
 
         public Player(float angle, float length, float thickness, float speed, Color color, Keys clockwise, Keys counterClockwise)
         {
